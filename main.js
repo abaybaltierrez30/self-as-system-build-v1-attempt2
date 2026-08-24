@@ -33,6 +33,24 @@ function draw(x, y, width, height, positions) {
   context.restore();
 }
 
+for(var y = step; y < size - step; y += step) {
+  for(var x = step; x < size - step; x+= step) {
+    draw(x, y, step, step, [0.5]);      
+  }
+}
+
+    if(y < aThirdOfHeight) {
+      draw(x, y, step, step, [0.5]);   
+    } else if(y < aThirdOfHeight * 2) {
+      draw(x, y, step, step, [0.2, 0.8]);      
+    } else {
+      draw(x, y, step, step, [0.1, 0.5, 0.9]);      
+    }
+
+    context.translate(x + width/2, y + height/2);
+  context.rotate(Math.random() * 5);
+  context.translate(-width/2, -height/2);
+
 function render() {
   var size = resizeAndSetup();
   context.clearRect(0, 0, size, size);
