@@ -3,15 +3,24 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Visual Rule Test — Un Deux Trois</title>
-  <style>
-    html,body{height:100%;margin:0}
-    body{display:flex;align-items:center;justify-content:center;background:#111;color:#eee}
-    canvas{display:block;background:#fff;border-radius:6px}
-  </style>
+  <title>Visual Rule Test</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <canvas></canvas>
+  <div class="test-grid">
+    <div class="test-card">
+      <h2>Test 1</h2>
+      <canvas id="test-1"></canvas>
+    </div>
+    <div class="test-card">
+      <h2>Test 2</h2>
+      <canvas id="test-2"></canvas>
+    </div>
+    <div class="test-card test-card--accent">
+      <h2>Test 3</h2>
+      <canvas id="test-3"></canvas>
+    </div>
+  </div>
   <script src="main.js"></script>
 </body>
 </html>
