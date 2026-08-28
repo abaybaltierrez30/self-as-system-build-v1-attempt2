@@ -284,3 +284,213 @@ createDisarraySketch(document.getElementById('test-3'), {
   strokeBoost: 5,
   lineWidth: 2.4
 });
+
+function createHoursOfDarkSketch(canvas) {
+  var context = canvas.getContext('2d');
+  var particles = [];
+  var pointer = {
+    x: 0,
+    y: 0,
+    active: false,
+    burst: false
+  };
+  var animationFrame = null;
+
+  function resizeAndSetup() {
+    var size = 320;
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    canvas.style.width = size + 'px';
+    canvas.style.height = size + 'px';
+    context.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return size;
+  }
+
+  function buildParticles(size) {
+    particles = [];
+
+    var gridw = size * 0.9;
+    var gridh = size * 0.7;
+    var margx = (size - gridw) * 0.5;
+    var margy = (size - gridh) * 0.5;
+    var innerLeft = margx;
+    var innerTop = margy;
+    var innerRight = size - margx;
+    var innerBottom = size - margy;
+    var borderBand = 18;
+    var count = 60;
+
+    for (var i = 0; i < count; i++) {
+      var edge = Math.floor(Math.random() * 4);
+      var x;
+      var y;
+
+      if (edge === 0) {
+        x = Math.random() * size;
+        y = Math.random() * borderBand + innerTop - borderBand;
+      } else if (edge === 1) {
+        x = innerRight + Math.random() * borderBand;
+        y = Math.random() * size;
+      } else if (edge === 2) {
+        x = Math.random() * size;
+        y = innerBottom + Math.random() * borderBand;
+      } else {
+        x = Math.random() * borderBand + innerLeft - borderBand;
+        y = Math.random() * size;
+      }
+
+      x = Math.min(Math.max(x, 0), size);
+      y = Math.min(Math.max(y, 0), size);
+
+      particles.push({
+        x: x,
+        y: y,
+        baseX: x,
+        baseY: y,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        radius: 1.2 + Math.random() * 1.8
+      });
+    }
+  }
+
+  function updateParticles(size) {
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+      var driftX = Math.sin((p.baseY + i) * 0.16) * 0.18;
+      var driftY = Math.cos((p.baseX + i) * 0.15) * 0.18;
+
+      p.vx += (p.baseX + driftX - p.x) * 0.06;
+      p.vy += (p.baseY + driftY - p.y) * 0.06;
+
+      if (pointer.active) {
+        var dx = p.x - pointer.x;
+        var dy = p.y - pointer.y;
+        var distance = Math.sqrt(dx * dx + dy * dy);
+        var influenceRadius = pointer.burst ? 120 : 80;
+
+        if (distance < influenceRadius) {
+          var force = (1 - distance / influenceRadius) * (pointer.burst ? 1.5 : 0.55);
+          p.vx += (dx / (distance || 1)) * force;
+          p.vy += (dy / (distance || 1)) * force;
+        }
+      }
+
+      p.vx *= 0.88;
+      p.vy *= 0.88;
+      p.x += p.vx;
+      p.y += p.vy;
+
+      if (p.x < 0 || p.x > size) {
+        p.x = Math.min(Math.max(p.x, 0), size);
+        p.vx *= -0.4;
+      }
+
+      if (p.y < 0 || p.y > size) {
+        p.y = Math.min(Math.max(p.y, 0), size);
+        p.vy *= -0.4;
+      }
+    }
+
+    pointer.burst = false;
+  }
+
+  function drawParticles() {
+    context.fillStyle = 'rgba(17, 17, 17, 0.06)';
+
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+      context.beginPath();
+      context.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      context.fill();
+    }
+  }
+
+  function drawCalendar(size) {
+    var cols = 23;
+    var rows = 16;
+    var days = 365;
+
+    var gridw = size * 0.9;
+    var gridh = size * 0.7;
+    var cellw = gridw / cols;
+    var cellh = gridh / rows;
+    var margx = (size - gridw) * 0.5;
+    var margy = (size - gridh) * 0.5;
+
+    for (var i = 0; i < days; i++) {
+      var col = Math.floor(i / rows);
+      var row = i % rows;
+
+      var x = margx + col * cellw;
+      var y = margy + row * cellh;
+      var w = 2;
+      var h = 30;
+
+      context.save();
+      context.translate(x, y);
+
+      context.beginPath();
+      context.rect(0, 0, cellw, cellh);
+      context.clip();
+
+      context.translate(cellw * 0.5, cellh * 0.5);
+
+      var phi = (i / days) * Math.PI;
+      var theta = Math.sin(phi) * Math.PI * 0.45 + 0.85;
+
+      context.rotate(theta);
+
+      var scale = Math.abs(Math.cos(phi)) * 2 + 1;
+      context.scale(scale, 1);
+
+      context.fillStyle = '#111';
+      context.beginPath();
+      context.rect(w * -0.5, h * -0.5, w, h);
+      context.fill();
+
+      context.restore();
+    }
+  }
+
+  function render() {
+    var size = resizeAndSetup();
+    context.clearRect(0, 0, size, size);
+
+    drawCalendar(size);
+    updateParticles(size);
+    drawParticles();
+
+    animationFrame = requestAnimationFrame(render);
+  }
+
+  function handlePointerMove(event) {
+    var rect = canvas.getBoundingClientRect();
+    pointer.x = (event.clientX - rect.left) * (320 / rect.width);
+    pointer.y = (event.clientY - rect.top) * (320 / rect.height);
+    pointer.active = true;
+  }
+
+  function handlePointerLeave() {
+    pointer.active = false;
+    pointer.burst = false;
+  }
+
+  function handleClick(event) {
+    var rect = canvas.getBoundingClientRect();
+    pointer.x = (event.clientX - rect.left) * (320 / rect.width);
+    pointer.y = (event.clientY - rect.top) * (320 / rect.height);
+    pointer.active = true;
+    pointer.burst = true;
+  }
+
+  canvas.addEventListener('pointermove', handlePointerMove);
+  canvas.addEventListener('pointerleave', handlePointerLeave);
+  canvas.addEventListener('click', handleClick);
+
+  buildParticles(320);
+  render();
+}
+
+createHoursOfDarkSketch(document.getElementById('test-4'));
