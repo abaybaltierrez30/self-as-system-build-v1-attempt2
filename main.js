@@ -86,7 +86,8 @@ function createDisarraySketch(canvas, options) {
   var pointer = {
     x: size / 2,
     y: size / 2,
-    active: false
+    active: false,
+    disperse: false
   };
 
   function createSquare(i, j) {
@@ -185,7 +186,7 @@ function createDisarraySketch(canvas, options) {
         continue;
       }
 
-      if (pointer.active) {
+      if (pointer.disperse) {
         var dx = square.baseX - pointer.x;
         var dy = square.baseY - pointer.y;
         var distance = Math.sqrt(dx * dx + dy * dy);
@@ -196,9 +197,9 @@ function createDisarraySketch(canvas, options) {
           var pushX = Math.cos(angle) * force;
           var pushY = Math.sin(angle) * force;
 
-          square.x += (square.baseX + pushX - square.x) * 0.18;
-          square.y += (square.baseY + pushY - square.y) * 0.18;
-          square.rotation += (square.baseRotation + force * 0.02 - square.rotation) * 0.2;
+          square.x += (square.baseX + pushX - square.x) * 0.35;
+          square.y += (square.baseY + pushY - square.y) * 0.35;
+          square.rotation += (square.baseRotation + force * 0.02 - square.rotation) * 0.4;
           continue;
         }
       }
@@ -206,6 +207,10 @@ function createDisarraySketch(canvas, options) {
       square.x += (square.baseX - square.x) * 0.08;
       square.y += (square.baseY - square.y) * 0.08;
       square.rotation += (square.baseRotation - square.rotation) * 0.08;
+    }
+
+    if (pointer.disperse) {
+      pointer.disperse = false;
     }
   }
 
@@ -229,10 +234,15 @@ function createDisarraySketch(canvas, options) {
 
   function handlePointerLeave() {
     pointer.active = false;
+    pointer.disperse = false;
   }
 
   function handleClick(event) {
     var pt = getPointerPosition(event);
+    pointer.x = pt.x;
+    pointer.y = pt.y;
+    pointer.active = true;
+    pointer.disperse = true;
 
     for (var i = squares.length - 1; i >= 0; i--) {
       if (pointInSquare(pt.x, pt.y, squares[i])) {
