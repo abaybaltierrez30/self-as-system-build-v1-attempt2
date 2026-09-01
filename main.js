@@ -1,5 +1,6 @@
 function createUnDeuxTroisSketch(canvas) {
   var context = canvas.getContext('2d');
+  var pointer = { x: 0, y: 0, active: false };
 
   function resizeAndSetup() {
     var size = 320;
@@ -12,17 +13,33 @@ function createUnDeuxTroisSketch(canvas) {
     return size;
   }
 
-  function draw(x, y, width, height, positions) {
-    context.save();
-    context.translate(x, y);
+  function drawButton(x, y, w, h, highlighted) {
+    var gradient = context.createLinearGradient(x, y, x + w, y + h);
+    gradient.addColorStop(0, '#7b5ef7');
+    gradient.addColorStop(1, '#ff7d6d');
 
-    for (var i = 0; i < positions.length; i++) {
-      context.beginPath();
-      context.moveTo(positions[i] * width, 0);
-      context.lineTo(positions[i] * width, height);
-      context.stroke();
+    context.save();
+    context.translate(x + w / 2, y + h / 2);
+    context.rotate((Math.random() - 0.5) * 0.4);
+    context.translate(-(x + w / 2), -(y + h / 2));
+
+    context.beginPath();
+    context.rect(x, y, w, h);
+
+    if (highlighted) {
+      context.shadowColor = 'rgba(255, 146, 118, 0.9)';
+      context.shadowBlur = 14;
+    } else {
+      context.shadowColor = 'rgba(123, 94, 247, 0.15)';
+      context.shadowBlur = 6;
     }
 
+    context.fillStyle = gradient;
+    context.fill();
+    context.shadowBlur = 0;
+    context.lineWidth = highlighted ? 2 : 1.5;
+    context.strokeStyle = highlighted ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.35)';
+    context.stroke();
     context.restore();
   }
 
@@ -38,25 +55,38 @@ function createUnDeuxTroisSketch(canvas) {
         var positions;
         if (y < aThirdOfHeight) {
           positions = [0.5];
-          context.strokeStyle = '#111';
         } else if (y < aThirdOfHeight * 2) {
           positions = [0.2, 0.8];
-          context.strokeStyle = '#c0392b';
         } else {
           positions = [0.1, 0.5, 0.9];
-          context.strokeStyle = '#2980b9';
         }
 
-        context.save();
-        context.translate(x + step / 2, y + step / 2);
-        context.rotate((Math.random() - 0.5) * 0.4);
-        context.translate(-step / 2, -step / 2);
+        for (var i = 0; i < positions.length; i++) {
+          var pos = positions[i];
+          var buttonW = step * 0.18;
+          var buttonH = step * 0.76;
+          var buttonX = x + (pos * step) - buttonW * 0.5;
+          var buttonY = y + (step - buttonH) * 0.5;
+          var highlighted = pointer.active && pointer.x >= buttonX && pointer.x <= buttonX + buttonW && pointer.y >= buttonY && pointer.y <= buttonY + buttonH;
 
-        draw(0, 0, step, step, positions);
-        context.restore();
+          drawButton(buttonX, buttonY, buttonW, buttonH, highlighted);
+        }
       }
     }
   }
+
+  canvas.addEventListener('pointermove', function (event) {
+    var rect = canvas.getBoundingClientRect();
+    pointer.x = (event.clientX - rect.left) * (320 / rect.width);
+    pointer.y = (event.clientY - rect.top) * (320 / rect.height);
+    pointer.active = true;
+    render();
+  });
+
+  canvas.addEventListener('pointerleave', function () {
+    pointer.active = false;
+    render();
+  });
 
   window.addEventListener('resize', render);
   render();
