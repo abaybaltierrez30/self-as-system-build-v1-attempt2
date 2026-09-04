@@ -7,28 +7,38 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="test-grid">
-    <div class="test-card">
-      <h2>Lines of Tinted Interface</h2>
-      <canvas id="test-1"></canvas>
-      <p>This canvas tests the purple-salmon palette in constance in the interface, as well as an animated layout. The cursor controls the input, whenever the small rectangular buttons are pressed.</p>
-    </div>
-    <div class="test-card">
-      <h2>Reactive Dispersion Effecting</h2>
-      <canvas id="test-2"></canvas>
-      <p>This canvas tests the latter part of the first rule (disperse and accumulate into form), and the squares reacting in movement. The cursor, once again controls the input fed into the test. After watching it run, I saw the rule was a struggle to apply, as sometimes, the click animation would not work when applying it. When I tried to give more pizzazz by making the animation do a disintegration into dust and reform, I saw a weakness there in that the disintegration part was nonfunctional for the program, so I simplified and remade it back to its original dispersing form.</p>
-    </div>
-    <div class="test-card test-card--accent">
-      <h2>Bigger and Bolder</h2>
-      <canvas id="test-3"></canvas>
-      <p>This canvas is relatively similar to the one in Test 2, except this one now also tests the “bigger and bolder” part further, and has the same input as Test 2. There were no changes here—things went smooth sailing.</p>
-    </div>
-    <div class="test-card">
-      <h2>Atmospheric Belt</h2>
-      <canvas id="test-4"></canvas>
-      <p>This canvas tests the shapes with transparency around each window rule. As all the others do, this is a cursor-input canvas.</p>
-    </div>
+  <canvas id="atmo-backdrop" class="atmo-backdrop"></canvas>
+
+  <div id="welcome-overlay" class="welcome-overlay">
+    <div class="welcome-text">WELCOME TO THE DEMO MENU!</div>
   </div>
-  <script src="main.js"></script>
+
+  <main class="app-shell" role="main" aria-label="Demo Menu">
+    <div class="app-window" id="app-window">
+      <div class="titlebar">
+        <div class="controls">
+          <span class="ctrl ctrl--close"></span>
+          <span class="ctrl ctrl--min"></span>
+          <span class="ctrl ctrl--max"></span>
+        </div>
+        <div class="title">Demo Menu</div>
+      </div>
+      <div class="window-body">
+        <div class="buttons-grid">
+          <button class="app-btn">Button 1</button>
+          <button class="app-btn">Button 2</button>
+          <button class="app-btn">Button 3</button>
+          <button class="app-btn">Button 4</button>
+          <button class="app-btn">Button 5</button>
+          <button class="app-btn">Button 6</button>
+          <button class="app-btn">Button 7</button>
+          <button class="app-btn">Button 8</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+  <script src="menu.js"></script>
 </body>
 </html>

@@ -252,7 +252,9 @@ function createDisarraySketch(canvas, options) {
       drawSquare(squares[i]);
     }
 
-    requestAnimationFrame(render);
+    if (running) {
+      animationId = requestAnimationFrame(render);
+    }
   }
 
   function handlePointerMove(event) {
@@ -286,34 +288,81 @@ function createDisarraySketch(canvas, options) {
   canvas.addEventListener('pointerleave', handlePointerLeave);
   canvas.addEventListener('click', handleClick);
   buildSquares();
+
+  var running = true;
+  var animationId = null;
+
+  function start() {
+    if (!running) {
+      running = true;
+      render();
+    }
+  }
+
+  function stop() {
+    running = false;
+    if (animationId) {
+      cancelAnimationFrame(animationId);
+      animationId = null;
+    }
+  }
+
+  var controller = {
+    pause: stop,
+    resume: start,
+    updateOptions: function (newOpts) {
+      if (newOpts.squareSize != null) squareSize = newOpts.squareSize;
+      if (newOpts.randomDisplacement != null) randomDisplacement = newOpts.randomDisplacement;
+      if (newOpts.rotateMultiplier != null) rotateMultiplier = newOpts.rotateMultiplier;
+      if (newOpts.offset != null) offset = newOpts.offset;
+      if (newOpts.interactionRadius != null) interactionRadius = newOpts.interactionRadius;
+      if (newOpts.maxDisplacement != null) maxDisplacement = newOpts.maxDisplacement;
+      if (newOpts.nearbyScale != null) nearbyScale = newOpts.nearbyScale;
+      if (newOpts.strokeBoost != null) strokeBoost = newOpts.strokeBoost;
+      if (newOpts.lineWidth != null) context.lineWidth = newOpts.lineWidth;
+      buildSquares();
+    }
+  };
+
+  // start loop
   render();
+
+  return controller;
 }
 
-createUnDeuxTroisSketch(document.getElementById('test-1'));
-
-createDisarraySketch(document.getElementById('test-2'), {
-  size: 320,
-  squareSize: 30,
-  randomDisplacement: 15,
-  rotateMultiplier: 20,
-  offset: 10,
-  interactionRadius: 140,
-  maxDisplacement: 90,
-  lineWidth: 2
-});
-
-createDisarraySketch(document.getElementById('test-3'), {
-  size: 320,
-  squareSize: 32,
-  randomDisplacement: 18,
-  rotateMultiplier: 24,
-  offset: 12,
-  interactionRadius: 180,
-  maxDisplacement: 150,
-  nearbyScale: 1.5,
-  strokeBoost: 5,
-  lineWidth: 2.4
-});
+window.Sketches = window.Sketches || {};
+var el1 = document.getElementById('test-1');
+var el2 = document.getElementById('test-2');
+var el3 = document.getElementById('test-3');
+if (el1) {
+  window.Sketches.t1 = createUnDeuxTroisSketch(el1);
+}
+if (el2) {
+  window.Sketches.t2 = createDisarraySketch(el2, {
+    size: 320,
+    squareSize: 30,
+    randomDisplacement: 15,
+    rotateMultiplier: 20,
+    offset: 10,
+    interactionRadius: 140,
+    maxDisplacement: 90,
+    lineWidth: 2
+  });
+}
+if (el3) {
+  window.Sketches.t3 = createDisarraySketch(el3, {
+    size: 320,
+    squareSize: 32,
+    randomDisplacement: 18,
+    rotateMultiplier: 24,
+    offset: 12,
+    interactionRadius: 180,
+    maxDisplacement: 150,
+    nearbyScale: 1.5,
+    strokeBoost: 5,
+    lineWidth: 2.4
+  });
+}
 
 function createHoursOfDarkSketch(canvas) {
   var context = canvas.getContext('2d');
@@ -492,7 +541,9 @@ function createHoursOfDarkSketch(canvas) {
     updateParticles(size);
     drawParticles();
 
-    animationFrame = requestAnimationFrame(render);
+    if (running) {
+      animationFrame = requestAnimationFrame(render);
+    }
   }
 
   function handlePointerMove(event) {
@@ -520,7 +571,158 @@ function createHoursOfDarkSketch(canvas) {
   canvas.addEventListener('click', handleClick);
 
   buildParticles(320);
+
+  var running = true;
+  var animationFrame = null;
+
+  var controller = {
+    pause: function () { running = false; },
+    resume: function () { if (!running) { running = true; render(); } },
+    burst: function () { pointer.burst = true; }
+  };
+
   render();
+
+  return controller;
 }
 
-createHoursOfDarkSketch(document.getElementById('test-4'));
+function createWindowBackdrop(canvas, options) {
+  options = options || {};
+  var context = canvas.getContext('2d');
+  var count = options.count || 10;
+  var dpr = window.devicePixelRatio || 1;
+  var particles = [];
+  var time = 0;
+  var burstTimer = 0;
+
+  function resize() {
+    var w = canvas.clientWidth || canvas.width;
+    var h = canvas.clientHeight || canvas.height;
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    context.setTransform(dpr,0,0,dpr,0,0);
+  }
+
+  function init() {
+    resize();
+    particles = [];
+    var w = canvas.width / dpr;
+    var h = canvas.height / dpr;
+    for (var i = 0; i < count; i++) {
+      particles.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        baseX: Math.random() * w,
+        baseY: Math.random() * h,
+        r: 18 + Math.random() * 36,
+        vx: (Math.random() - 0.5) * 0.2,
+        vy: (Math.random() - 0.5) * 0.2
+      });
+    }
+  }
+
+  function draw() {
+    resize();
+    var w = canvas.width / dpr;
+    var h = canvas.height / dpr;
+    context.clearRect(0,0,w,h);
+    time += 0.016;
+
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+      var j = i;
+      p.vx += Math.cos((p.baseY + time * 6 + j) * 0.03) * 0.02;
+      p.vy += Math.sin((p.baseX + time * 5 + j) * 0.03) * 0.02;
+      p.x += p.vx;
+      p.y += p.vy;
+
+      // drift back
+      p.vx += (p.baseX - p.x) * 0.002;
+      p.vy += (p.baseY - p.y) * 0.002;
+
+      if (p.x < -100) p.x = w + 100;
+      if (p.x > w + 100) p.x = -100;
+      if (p.y < -100) p.y = h + 100;
+      if (p.y > h + 100) p.y = -100;
+
+      // draw radial gradient circle
+      var radius = p.r * (1 + Math.sin(time * 0.6 + i) * 0.08 + (burstTimer>0?0.6:0));
+      var grad = context.createRadialGradient(p.x, p.y, 0, p.x, p.y, radius);
+      grad.addColorStop(0, 'rgba(255,125,109,0.22)');
+      grad.addColorStop(0.4, 'rgba(123,94,247,0.14)');
+      grad.addColorStop(1, 'rgba(17,17,17,0)');
+      context.fillStyle = grad;
+      context.beginPath();
+      context.arc(p.x, p.y, radius, 0, Math.PI*2);
+      context.fill();
+    }
+
+    if (burstTimer > 0) burstTimer -= 1;
+    rafId = requestAnimationFrame(draw);
+  }
+
+  var rafId = null;
+
+  function start() {
+    if (!rafId) draw();
+  }
+
+  function stop() {
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+  }
+
+  function burst() {
+    burstTimer = 20;
+  }
+
+  window.addEventListener('resize', resize);
+  init();
+  start();
+
+  return { pause: stop, resume: start, burst: burst };
+}
+
+// only create t4 if element exists
+var el4 = document.getElementById('test-4');
+if (el4) {
+  window.Sketches.t4 = createHoursOfDarkSketch(el4);
+}
+
+// expose backdrop creator
+window.createWindowBackdrop = createWindowBackdrop;
+
+// initialize full-page backdrop and welcome overlay
+document.addEventListener('DOMContentLoaded', function () {
+  window.Sketches = window.Sketches || {};
+  var backdropCanvas = document.getElementById('atmo-backdrop');
+  if (backdropCanvas && window.createWindowBackdrop) {
+    window.Sketches.backdrop = window.createWindowBackdrop(backdropCanvas, { count: 14 });
+  }
+
+  // welcome overlay: hide after 2s
+  var welcome = document.getElementById('welcome-overlay');
+  if (welcome) {
+    setTimeout(function () {
+      welcome.style.transition = 'opacity 420ms ease, visibility 420ms';
+      welcome.style.opacity = '0';
+      setTimeout(function () { welcome.style.display = 'none'; }, 520);
+    }, 2000);
+  }
+
+  // entrance animation for app window after welcome
+  var appWin = document.getElementById('app-window');
+  if (appWin) {
+    appWin.style.opacity = '0';
+    appWin.style.transform = 'translateY(18px) scale(0.98)';
+    setTimeout(function () {
+      appWin.style.transition = 'transform 420ms cubic-bezier(.2,.9,.3,1), opacity 420ms';
+      appWin.style.opacity = '1';
+      appWin.style.transform = 'translateY(0) scale(1)';
+    }, 2200);
+  }
+});
